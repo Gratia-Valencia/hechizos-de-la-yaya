@@ -73,21 +73,26 @@
     }
     return cacheFichas[i];
   }
+  // Iconos para los textos. Con los dibujos de Gemini se usa el archivo directamente:
+  // en file:// (Firefox y la app) un lienzo con imágenes no se puede pasar a dataURL.
   const iconoURL = {};
-  function icono(k) {                         // <img> para los textos (fichas y objetos)
+  const rutaIcono = k => typeof k === 'number' ? `assets/fichas/${k}.png` : `assets/objetos/${k}.png`;
+  function srcIcono(k) {
+    if (IMG[typeof k === 'number' ? 'f' + k : k]) return rutaIcono(k);
     const id = String(k);
-    if (!iconoURL[id] || iconoURL[id].sinImg !== !IMG[typeof k === 'number' ? 'f' + k : k]) {
+    if (!iconoURL[id]) {
       const cv = document.createElement('canvas'); cv.width = cv.height = 96;
       const c = cv.getContext('2d');
       if (typeof k === 'number') dibujarFicha(c, k, 0, 0, 96); else dibujarObjeto(c, k, 0, 0, 96);
-      iconoURL[id] = { url: cv.toDataURL(), sinImg: !IMG[typeof k === 'number' ? 'f' + k : k] };
+      try { iconoURL[id] = cv.toDataURL(); } catch (e) { iconoURL[id] = rutaIcono(k); }
     }
-    return `<img class="icono" data-ico="${id}" src="${iconoURL[id].url}" alt="">`;
+    return iconoURL[id];
   }
+  const icono = k => `<img class="icono" data-ico="${k}" src="${srcIcono(k)}" alt="">`;
   function refrescarIconos() {
     document.querySelectorAll('img[data-ico]').forEach(im => {
       const k = /^\d+$/.test(im.dataset.ico) ? +im.dataset.ico : im.dataset.ico;
-      const tmp = document.createElement('div'); tmp.innerHTML = icono(k); im.src = tmp.firstChild.src;
+      im.src = srcIcono(k);
     });
   }
 
