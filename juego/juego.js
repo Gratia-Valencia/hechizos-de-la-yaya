@@ -35,11 +35,11 @@
   ['portada', 'fondo-mapa', 'fondo-tablero'].forEach(k => {
     const im = new Image(); im.onload = () => {
       IMG[k] = im;
-      if (k === 'portada') $('portada').style.backgroundImage = `url(assets/${k}.png)`, $('decorPortada').style.visibility = 'hidden';
-      if (k === 'fondo-tablero') $('juego').style.backgroundImage = `linear-gradient(#2a184055,#2a184055),url(assets/${k}.png)`;
-      if (k === 'fondo-mapa') $('scroll').style.background = `url(assets/${k}.png) center top / 100% auto repeat-y`;
+      if (k === 'portada') $('portada').style.backgroundImage = `url(assets/${k}.jpg)`, $('decorPortada').style.visibility = 'hidden';
+      if (k === 'fondo-tablero') $('juego').style.backgroundImage = `linear-gradient(#2a184066,#2a184066),url(assets/${k}.jpg)`;
+      if (k === 'fondo-mapa') { $('camino').style.background = `url(assets/${k}.jpg) center bottom / 100% auto repeat-y`; if (pantalla === 'mapa') pintarMapa(); }
     };
-    im.src = `assets/${k}.png`;
+    im.src = `assets/${k}.jpg`;
   });
 
   function dibujarFicha(c, i, x, y, s) {       // una ficha en (x,y) = esquina, tamaño s
