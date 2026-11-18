@@ -32,6 +32,7 @@
   const cargar = (k, src) => { const im = new Image(); im.onload = () => { IMG[k] = im; cacheFichas = null; refrescarIconos(); }; im.src = src; };
   FICHAS.forEach((f, i) => cargar('f' + i, `assets/fichas/${i}.png`));
   Object.keys(OBJ).forEach(k => cargar(k, `assets/objetos/${k}.png`));
+  ['casilla0', 'casilla1'].forEach(k => { const im = new Image(); im.onload = () => { IMG[k] = im; }; im.src = `assets/ui/${k}.png`; });
   ['portada', 'fondo-mapa', 'fondo-tablero'].forEach(k => {
     const im = new Image(); im.onload = () => {
       IMG[k] = im;
@@ -326,8 +327,9 @@
   function medir() {
     if (!L) return;
     const box = $('tablero'), bw = box.clientWidth - 12, bh = box.clientHeight - 12;
-    cs = Math.max(20, Math.floor(Math.min(bw / L.cols, bh / L.rows)));
+    cs = Math.max(20, Math.floor(Math.min(bw / (L.cols + 1.3), bh / (L.rows + 1.3))));   // deja sitio para el marco
     W = cs * L.cols; H = cs * L.rows;
+    $('marco').style.borderWidth = Math.round(cs * .65) + 'px';
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     cacheFichas = null;
@@ -411,9 +413,11 @@
   function dibujar(ahora) {
     cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.clearRect(0, 0, W, H);
     // fondo del tablero
-    cx.fillStyle = '#1a0e2bcc'; cx.beginPath(); cx.roundRect ? cx.roundRect(0, 0, W, H, cs * .3) : cx.rect(0, 0, W, H); cx.fill();
+    cx.fillStyle = '#2a1a3ecc'; cx.fillRect(0, 0, W, H);
     for (let r = 0; r < L.rows; r++) for (let c = 0; c < L.cols; c++) {
-      cx.fillStyle = (r + c) % 2 ? '#ffffff10' : '#ffffff1c'; cx.fillRect(c * cs + 2, r * cs + 2, cs - 4, cs - 4);
+      const cas = IMG[(r + c) % 2 ? 'casilla1' : 'casilla0'];
+      if (cas) cx.drawImage(cas, c * cs + 1, r * cs + 1, cs - 2, cs - 2);
+      else { cx.fillStyle = (r + c) % 2 ? '#ffffff10' : '#ffffff1c'; cx.fillRect(c * cs + 2, r * cs + 2, cs - 4, cs - 4); }
       if (dweb[r][c] > 0) dibujarTela(c * cs, r * cs, cs, dweb[r][c]);
     }
     const s = Math.round(cs * DPR);
