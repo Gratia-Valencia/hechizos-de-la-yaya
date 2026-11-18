@@ -1,0 +1,14 @@
+# Solo para Mārshal, no se sube
+Prompts para Gemini*.txt
+Prueba*.png
+llave*/
+*.jks
+*.apk
+originales-gemini/
+# Se genera al compilar
+android/app/src/main/assets/
+android/.gradle/
+android/build/
+android/app/build/
+Vista previa*.png
+Opciones de letra.png

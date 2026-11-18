@@ -1,0 +1,7 @@
+<!doctype html><meta charset=utf-8><body style="font:14px monospace;background:#fff;margin:8px"><pre id=o>...</pre>
+<script src="motor.js"></script><script>
+const N=+(location.hash.slice(1)||8), out=[]; let tot=0,tot5=0;
+for(let n=1;n<=50;n++){let w=0,w5=0;for(let k=0;k<N;k++){if(jugarBot(n,1000+k*77))w++;else if(jugarBot(n,1000+k*77,5))w5++;}
+const L=crearNivel(n);out.push(`${String(n).padStart(2)} ${L.goals.map(g=>g.k+(g.t!==undefined?g.t:'')+':'+g.n).join(',').padEnd(22)} mov ${L.moves} tipos ${L.types}  gana ${Math.round(100*w/N)}%  +poción ${Math.round(100*(w+w5)/N)}%`);}
+document.getElementById('o').textContent=out.join('\n');
+</script>
