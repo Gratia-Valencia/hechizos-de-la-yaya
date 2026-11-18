@@ -9,7 +9,13 @@ if (window.NodeList && !NodeList.prototype.forEach) NodeList.prototype.forEach =
   const CLAVE = 'hechizos-yaya-v1';
   const POC_MAX = 5, POC_RECARGA = 20 * 60 * 1000, POC_MOVS = 5;
   let G = { nivel: 1, estrellas: {}, pot: 3, potT: Date.now(), k: 1.1, sonido: true, musica: true, ayuda: {} };
-  try { Object.assign(G, JSON.parse(localStorage.getItem(CLAVE) || '{}')); } catch (e) {}
+  let guardado = null;
+  try { guardado = JSON.parse(localStorage.getItem(CLAVE) || 'null'); } catch (e) {}
+  if (guardado) Object.assign(G, guardado);
+  else {                                     // primera vez: tamaño de letra según el del móvil
+    const fs = parseFloat((/[?&]fs=([\d.]+)/.exec(location.search) || [])[1] || '1');
+    G.k = fs >= 1.6 ? 1.5 : fs >= 1.2 ? 1.25 : 1.1;
+  }
   const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(G)); } catch (e) {} };
   function recargar() {                       // las pociones se recargan solas
     const ahora = Date.now();
@@ -118,7 +124,13 @@ if (window.NodeList && !NodeList.prototype.forEach) NodeList.prototype.forEach =
     const d = document.createElement('div'); d.className = 'aviso'; d.textContent = txt;
     document.body.appendChild(d); setTimeout(() => d.remove(), 1200);
   }
-  function aplicarTam() { document.documentElement.style.setProperty('--k', G.k); if (pantalla === 'juego') requestAnimationFrame(medir); }
+  function aplicarTam() {
+    document.documentElement.style.setProperty('--k', G.k);
+    // En la pantalla del tablero los carteles crecen como mucho hasta «Grande», para que quepa el tablero
+    const z = Math.min(1, 1.2 / G.k);
+    document.querySelectorAll('#juego .barra, #juego .hud, #juego .mision, #juego .pie').forEach(el => { el.style.zoom = z; });
+    if (pantalla === 'juego') requestAnimationFrame(medir);
+  }
   aplicarTam(); Sonido.ponerSonido(G.sonido); Sonido.ponerMusica(G.musica);
 
   // ---------- Ajustes y ayuda ----------

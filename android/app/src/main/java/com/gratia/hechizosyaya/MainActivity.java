@@ -25,9 +25,14 @@ public class MainActivity extends Activity {
         s.setDomStorageEnabled(true);              // para guardar niveles, estrellas y pociones
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setAllowFileAccess(true);
+        // El juego tiene su propio tamaño de letra (Ajustes). Si el móvil tiene la letra grande,
+        // Android la agrandaba también dentro del juego y los botones se salían de la pantalla.
+        s.setTextZoom(100);
 
         web.setWebViewClient(new WebViewClient());
-        web.loadUrl("file:///android_asset/juego/index.html");
+        // Se le pasa al juego el tamaño de letra del móvil para elegir el tamaño inicial.
+        float fs = getResources().getConfiguration().fontScale;
+        web.loadUrl("file:///android_asset/juego/index.html?fs=" + fs);
         hideBars();
     }
 
