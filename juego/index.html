@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Hechizos de la Yaya</title>
 <link rel="icon" href="assets/icono.png">
+<script>
+  // Si algo falla (por ejemplo en un Android antiguo), se ve el error en pantalla para poder arreglarlo.
+  window.onerror = function (m, f, l, c) {
+    var d = document.getElementById('fallo');
+    if (!d) { d = document.createElement('div'); d.id = 'fallo'; d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:999;background:#fff;color:#b00;font:14px sans-serif;padding:10px;border-radius:10px;white-space:pre-wrap'; (document.body || document.documentElement).appendChild(d); d.textContent = '⚠️ Haz una foto de esto y pásasela a Mārshal:\n'; }
+    d.textContent += m + ' (' + String(f).split('/').pop() + ' ' + l + ':' + c + ')\n' + navigator.userAgent + '\n';
+  };
+</script>
 <style>
   @font-face { font-family: Bruja; src: url(assets/fuentes/HennyPenny-Regular.ttf); }
   @font-face { font-family: Fredoka; src: url(assets/fuentes/Fredoka.ttf); font-weight: 300 700; }
@@ -18,7 +26,7 @@
   html, body { margin: 0; height: 100%; background: var(--fondo); color: var(--texto); overflow: hidden;
     font-family: Fredoka, system-ui, sans-serif; font-weight: 500; -webkit-user-select: none; user-select: none; touch-action: none; }
   button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-  .pantalla { position: fixed; inset: 0; display: none; flex-direction: column; }
+  .pantalla { position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: none; flex-direction: column; }
   .pantalla.ver { display: flex; }
   .boton { background: var(--rojo); color: #fff; font-weight: 700; font-size: 1.35rem; padding: .6em 1.4em; border-radius: 1em;
     box-shadow: 0 .25rem 0 #9e2236; min-height: 3rem; }
@@ -46,7 +54,7 @@
   #scroll { flex: 1; overflow-y: auto; touch-action: pan-y; position: relative;
     background: linear-gradient(#1c3a2e, #24203f 30%, #2c1d47 60%, #1c3a2e); }
   #camino { position: relative; width: 100%; }
-  #camino svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #camino svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   .deco { position: absolute; font-size: 2.2rem; opacity: .8; pointer-events: none; }
   .nodo { position: absolute; width: 3.8rem; height: 3.8rem; margin: -1.9rem 0 0 -1.9rem; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffb3c0, var(--rojo)); box-shadow: 0 .3rem 0 #9e2236, 0 0 0 .2rem #fff6;
@@ -80,7 +88,7 @@
   .pie .boton img { width: 1.6rem; height: 1.6rem; }
 
   /* Ventanas */
-  #velo { position: fixed; inset: 0; background: #0d0616bb; display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 10; }
+  #velo { position: fixed; top: 0; right: 0; bottom: 0; left: 0; background: #0d0616bb; display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 10; }
   #velo.ver { display: flex; }
   .ventana { background: linear-gradient(#4a2d72, #34204f); border: .2rem solid #9b75d6; border-radius: 1.4rem; padding: 1.2rem 1.1rem;
     width: 100%; max-width: 30rem; max-height: 92vh; overflow-y: auto; text-align: center; box-shadow: 0 1rem 3rem #000a; animation: sale .25s ease-out; touch-action: pan-y; }

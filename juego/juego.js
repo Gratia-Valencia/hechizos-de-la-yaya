@@ -1,5 +1,6 @@
 'use strict';
 // 🧙‍♀️ Hechizos de la Yaya · pantallas, dibujos y animaciones.
+if (window.NodeList && !NodeList.prototype.forEach) NodeList.prototype.forEach = Array.prototype.forEach;   // Android antiguo
 (() => {
   const $ = id => document.getElementById(id);
   const DPR = Math.min(window.devicePixelRatio || 1, 3);
@@ -112,7 +113,7 @@
   }
   function cerrarVentana() { $('velo').classList.remove('ver'); const f = alCerrar; alCerrar = null; if (f) f(); }
   const ventanaAbierta = () => $('velo').classList.contains('ver');
-  $('velo').addEventListener('pointerdown', e => { if (e.target === $('velo') && ventanaCerrable) { Sonido.efecto('toque'); cerrarVentana(); } });
+  $('velo').addEventListener(window.PointerEvent ? 'pointerdown' : 'click', e => { if (e.target === $('velo') && ventanaCerrable) { Sonido.efecto('toque'); cerrarVentana(); } });
   function aviso(txt) {
     const d = document.createElement('div'); d.className = 'aviso'; d.textContent = txt;
     document.body.appendChild(d); setTimeout(() => d.remove(), 1200);
@@ -355,14 +356,20 @@
   }
   const FRASES_COMBO = ['', '', '¡Bien!', '¡Muy bien!', '¡Estupendo!', '¡Mágico!', '¡Hechizo total!'];
 
-  async function reproducir(pasos) {
-    for (const p of pasos) {
+  // Sin async/await, para que funcione en móviles con Android antiguo.
+  function reproducir(pasos) {
+    let cadena = Promise.resolve();
+    pasos.forEach(p => { cadena = cadena.then(() => reproducirPaso(p)); });
+    return cadena;
+  }
+  function reproducirPaso(p) {
+    {
       if (p.tipo === 'cambiar' || p.tipo === 'volver') {
         const A = sprites.get(p.ida), B = sprites.get(p.idb);
         const [ra, ca] = p.tipo === 'cambiar' ? p.b : p.a, [rb, cb] = p.tipo === 'cambiar' ? p.a : p.b;
         tween(A, 'x', A.x, ca, 150); tween(A, 'y', A.y, ra, 150); tween(B, 'x', B.x, cb, 150); tween(B, 'y', B.y, rb, 150);
         Sonido.efecto(p.tipo === 'cambiar' ? 'cambiar' : 'mal');
-        await espera(170);
+        return espera(170);
       } else if (p.tipo === 'combo') {
         Sonido.efecto('especial'); aviso('✨ ¡Hechizo doble! ✨');
       } else if (p.tipo === 'borrar') {
@@ -384,20 +391,21 @@
         if (p.quitadas.length) { const n = p.quitadas.length; flotan.push({ txt: '+' + p.puntos, x: (sx / n + .5) * cs, y: (sy / n + .5) * cs, t: 0 }); }
         if (p.combo >= 2) aviso(FRASES_COMBO[Math.min(p.combo, FRASES_COMBO.length - 1)]);
         pintarHud(p.foto);
-        await espera(230);
-        for (const q of p.quitadas) sprites.delete(q.id);
+        return espera(230).then(() => { for (const q of p.quitadas) sprites.delete(q.id); });
       } else if (p.tipo === 'caer') {
         let max = 0;
         for (const q of p.caen) { const s = sprites.get(q.id); if (!s) continue; const d = 140 + 70 * Math.sqrt(q.a - q.de); tween(s, 'y', q.de, q.a, d, 'rebote'); max = Math.max(max, d); }
         for (const q of p.nuevas) { const s = { id: q.id, t: q.t, s: null, lock: false, x: q.c, y: q.de, sc: 1, a: 1 }; sprites.set(q.id, s); const d = 140 + 70 * Math.sqrt(q.a - q.de); tween(s, 'y', q.de, q.a, d, 'rebote'); max = Math.max(max, d); }
-        await espera(max + 20);
+        return espera(max + 20);
       } else if (p.tipo === 'mezclar') {
         aviso('🔮 ¡A remover el caldero!');
-        await espera(500);
-        for (const q of p.tipos) { const s = sprites.get(q.id); if (s) { s.t = q.t; tween(s, 'sc', .3, 1, 300, 'rebote'); } }
-        await espera(350);
+        return espera(500).then(() => {
+          for (const q of p.tipos) { const s = sprites.get(q.id); if (s) { s.t = q.t; tween(s, 'sc', .3, 1, 300, 'rebote'); } }
+          return espera(350);
+        });
       }
     }
+    return Promise.resolve();
   }
 
   // ---------- Dibujar el tablero ----------
@@ -493,7 +501,13 @@
     const c = Math.floor((e.clientX - b.left) / cs), r = Math.floor((e.clientY - b.top) / cs);
     return r >= 0 && r < L.rows && c >= 0 && c < L.cols ? [r, c] : null;
   }
-  cv.addEventListener('pointerdown', e => {
+  const tocar = (tipo, f) => {       // con pointer events si los hay; si no (Android antiguo), con toques
+    if (window.PointerEvent) { cv.addEventListener('pointer' + tipo, f); return; }
+    const ev = { down: 'touchstart', move: 'touchmove', up: 'touchend', cancel: 'touchcancel' }[tipo];
+    cv.addEventListener(ev, e => { const t = e.changedTouches[0]; e.preventDefault(); f({ clientX: t.clientX, clientY: t.clientY, pointerId: 0 }); }, { passive: false });
+    if (tipo !== 'cancel') cv.addEventListener({ down: 'mousedown', move: 'mousemove', up: 'mouseup' }[tipo], f);
+  };
+  tocar('down', e => {
     if (ocupado || !E || ventanaAbierta()) return;
     Sonido.init(); ultimoToque = performance.now(); pistaPar = null;
     const p = celda(e); if (!p) return;
@@ -502,9 +516,9 @@
     if (seleccion && Math.abs(seleccion[0] - p[0]) + Math.abs(seleccion[1] - p[1]) === 1) { const a = seleccion; seleccion = null; jugar(a, p); return; }
     seleccion = p; Sonido.efecto('toque');
     arrastre = { p, x: e.clientX, y: e.clientY };
-    try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+    try { if (cv.setPointerCapture && window.PointerEvent) cv.setPointerCapture(e.pointerId); } catch (er) {}
   });
-  cv.addEventListener('pointermove', e => {
+  tocar('move', e => {
     if (!arrastre || ocupado) return;
     const dx = e.clientX - arrastre.x, dy = e.clientY - arrastre.y;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < cs * .35) return;
@@ -513,19 +527,20 @@
     if (q[0] < 0 || q[0] >= L.rows || q[1] < 0 || q[1] >= L.cols) return;
     jugar([r, c], q);
   });
-  cv.addEventListener('pointerup', () => { arrastre = null; });
-  cv.addEventListener('pointercancel', () => { arrastre = null; });
+  tocar('up', () => { arrastre = null; });
+  tocar('cancel', () => { arrastre = null; });
 
-  async function jugar(a, b) {
+  function jugar(a, b) {
     const res = E.mover(a, b);
     if (!res) { Sonido.efecto('mal'); if (E.grid[b[0]][b[1]] && E.grid[b[0]][b[1]].lock) aviso('🔒 Está cerrada'); return; }
     ocupado = true; pistaPar = null;
-    await reproducir(res.pasos);
-    ocupado = false; ultimoToque = performance.now();
-    pintarHud(E.foto());
-    if (res.mal) return;
-    if (E.ganado()) { ocupado = true; await espera(500); ocupado = false; ganar(); }
-    else if (E.moves <= 0) { await espera(400); sinMovimientos(); }
+    return reproducir(res.pasos).then(() => {
+      ocupado = false; ultimoToque = performance.now();
+      pintarHud(E.foto());
+      if (res.mal) return;
+      if (E.ganado()) { ocupado = true; return espera(500).then(() => { ocupado = false; ganar(); }); }
+      if (E.moves <= 0) return espera(400).then(sinMovimientos);
+    });
   }
 
   // ---------- Botón atrás del móvil y pausa ----------
@@ -552,7 +567,7 @@
     if (h.includes('-gana')) setTimeout(ganar, 300);
     if (h.includes('-sin')) { E.moves = 0; setTimeout(sinMovimientos, 300); }
     if (h.includes('-jugar')) {                 // el bot juega unas jugadas con animación
-      (async () => { for (let i = 0; i < 4; i++) { await espera(300); const p = E.pista(); if (p) await jugar(p[0], p[1]); } })();
+      let k = 0; const otra = () => { if (k++ >= 4) return; espera(300).then(() => { const p = E.pista(); return p ? jugar(p[0], p[1]) : null; }).then(otra); }; otra();
     }
   }
   else if (h.startsWith('#prueba-ajustes')) { ajustes(); }
